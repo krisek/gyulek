@@ -1,0 +1,1 @@
+ALTER TABLE `gyulek`.`members` ADD COLUMN `telefon_mobil` VARCHAR(100)  NOT NULL AFTER `cim`;

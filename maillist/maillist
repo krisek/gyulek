@@ -1,0 +1,156 @@
+#!/usr/bin/php
+<?php
+/*#chdir('/home/kris/public_html/gyulek/maillist');*/
+
+$list = $argv[1];
+
+/*#$_ENV[LOCAL_PART];*/
+
+#$error = fopen('/var/log/exim4/maillist.'.getmypid().'_'.$_ENV['MESSAGE_ID'],'w');
+$error = fopen('/tmp/maillist.'.getmypid().'_'.$_ENV['MESSAGE_ID'],'w');
+fwrite($error,print_r($_ENV, 1));
+fwrite($error,print_r($argv, 1));
+fwrite($error, "$list\n");
+
+$recipients = array();
+$names = array();
+
+if(!isset($offshore_enabled) || $offshore_enabled){
+
+$opts=array(
+    "ssl"=>array(
+        "verify_peer"=>false,
+        "verify_peer_name"=>false,
+    ),
+);  
+
+    /*#rurl = "https://gyulek.budavar.hu/gyulek/maillist.php?list=".urlencode($list)."&key=kulcs123"; */
+    $url = "https://var.lxs.cloud/gyulek/maillist.php?list=".urlencode($list);
+    fwrite($error, "$url\n");
+    fopen($url,"r",false, stream_context_create($opts));
+    $lines = file($url);
+    fwrite($error, "lines received");
+    fwrite($error, $lines);
+    foreach($lines as $line){
+        fwrite($error,"$line\n");
+        $line = trim($line);
+    $fields = array();
+        $fields = preg_split("/:/",$line);
+        fwrite($error, "name: $fields[1]\n");
+        array_push($recipients, $fields[2]);
+        array_push($names, "$fields[1] <$fields[2]>");
+    }
+}
+else{
+chdir('/var/www/gyulek/maillist');
+    include('../config_base.php');
+    $statement = "select id, nev, email FROM ${global_table_prefix}members m WHERE  m.leave = '0000-00-00' and m.id IN (SELECT object_id FROM ${global_table_prefix}member_freetagged_objects WHERE tag_id IN (SELECT id FROM ${global_table_prefix}member_freetags WHERE replace(replace(replace(replace(replace(replace(replace(replace(replace(raw_tag,'ó','o'),'ú','u'),'í','i'),'ő','o'),'ü','u'),'ű','u'),'é','e'),'ö','o'),'á','a') = '$list')) and m.email != '';";
+
+
+    /*#echo "$statement\n";*/
+    fwrite($error, "$statement\n");
+
+    $result = mysqli_query($dbh, $statement) or die("Hiba a kérésben $statement\n");
+
+    while ($line = mysqli_fetch_assoc($result)) {
+        #echo "$line[email]\n";
+        fwrite($error, "$line[email]\n");
+        array_push($recipients, $line['email']);
+        array_push($names, "$line[nev] <$line[email]>");
+        }
+    
+    }
+
+
+
+$maillist = implode(' ', $recipients);
+if(!isset($tmpdir)){
+  $tmpdir = "/tmp";
+}
+$stdin = fopen('php://stdin', 'r');
+$tmpfname = tempnam($tmpdir, "maillist-");
+fwrite($error, "$tmpfname\n");
+$mail = fopen($tmpfname,'w');
+$input = '';
+$lookforsubject = 0;
+$lookforsubject = 0;
+$sender = '';
+$subject = '';
+$subject3 = '';
+while (false !== ($line = fgets($stdin))){
+    $input .= $line;
+    fwrite($mail,$line);
+    $line = rtrim($line);
+
+    if($sender == '' && preg_match('/^From: (.*)/', $line, $match)){
+        $sender = $match[1];
+        $lookforsender =1;
+        fwrite($error, "Sender look  $line\n");
+    }
+    elseif($subject == '' && preg_match('/^Subject: (.*)/', $line, $match)){
+        $subject = $match[1];
+        $lookforsubject =1;
+        fwrite($error, "Subject look  $line\n");
+            
+    }
+    elseif($lookforsubject ==1 && preg_match("/^\s(.*)/", $line, $match)){
+        $subject .= ' '.$match[1];
+        fwrite($error, "Subject append $subject\n");
+    }
+    elseif($lookforsubject == 1){
+        fwrite($error, "Subject look stop: $line\n");
+        $lookforsubject = 0;
+    }
+    elseif($lookforsender == 1 && preg_match("/^\s(.*)/", $line, $match)){
+        $sender .= ' '.$match[1];
+        fwrite($error, "Sender append $sender\n");
+    }
+    elseif($lookforsender == 1){
+        fwrite($error, "Sender look stop: $line\n");
+        preg_match('/([A-Z0-9._%-\+]+@[A-Z0-9][A-Z0-9.-]{0,61}[A-Z0-9]\.[A-Z]{2,6})/i',$sender,$match);
+        $sender = $match[1];
+        $lookforsender = 0;
+    }
+
+}
+fclose($mail);
+
+/*#echo $input;*/ 
+if($sender == ''){
+    $sender = "mailman@budavar.lutheran.hu";
+}
+
+
+fwrite($error, "$maillist\n");
+fwrite($error, "$input\n");
+        
+foreach($recipients as $recipient){
+        $command = "/usr/sbin/sendmail  -f $sender -i  $recipient";
+        fwrite($error, "$command\n");
+        $output = shell_exec("cat $tmpfname |sed 's/To: .*/To: ${recipient}, undisclosed-recipients@lutheran.hu/'| $command");
+        sleep(2);
+}
+
+unlink($tmpfname);
+
+fwrite($error, "\n====\nSubject: $subject\n=====\n");
+
+$elements = imap_mime_header_decode($subject);
+for ($i=0; $i<count($elements); $i++) {
+    if($elements[$i]->charset = "default"){
+            $subject3 .= $elements[$i]->text;
+            }
+            else{
+            $subject3 .= recode("{$elements[$i]->charset}..iso-8859-2",$elements[$i]->text);
+        }
+/*#        fwrite($error, "\n====\n{$elements[$i]->text}\n=====\n");*/
+        }
+/*#$subject3 = iconv("utf-8","iso-8859-2",mb_decode_mimeheader($subject));*/
+$body = recode("utf-8..iso-8859-2","Kedves Feladó,\n\n\"").$subject3.recode("utf-8..iso-8859-2","\" témájú leveledet az alábbi címekre továbbította a levelezőkiszolgáló:\n".  implode("\n", $names) . "\n=====\n");
+fwrite($error, "\n====\nSubject: $subject3\n$body\n=====\n");
+mb_internal_encoding("ISO-8859-2");  
+mb_regex_encoding("ISO-8859-2"); 
+mb_send_mail($sender,  recode("utf-8..iso-8859-2","Levéllista értesítő" . " - $list: " ).$subject3 , $body, "From: mailman@budavar.lutheran.hu\nContent-Type: text/plain; charset=iso-8859-2", "-f $sender");
+
+exit(0);
+?>
