@@ -3,7 +3,7 @@
 FROM php:8.2-fpm
 
 # RUN apt install autoconf
-RUN apt install php-imap php-mysql php-fpm
+RUN apt update && apt install -y php-imap php-mysql php-fpm
 
 COPY config/php.ini /usr/local/etc/php/
 
