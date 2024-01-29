@@ -1,18 +1,11 @@
 # based on https://github.com/khromov/alpine-nginx-php8
 
-FROM php:8.2-fpm-alpine
+FROM php:8.2-fpm
 
 # RUN apt install autoconf
 RUN docker-php-ext-install mysqli && docker-php-ext-enable mysqli
 
-RUN set -xe && \
-    apk add --update --no-cache \
-        imap-dev \
-        openssl-dev \
-        krb5-dev && \
-    (docker-php-ext-configure imap --with-kerberos --with-imap-ssl) && \
-    (docker-php-ext-install imap > /dev/null) && \
-    php -m | grep -F 'imap'
+RUN docker-php-ext-install imap && docker-php-ext-enable imap
 
 COPY config/php.ini /usr/local/etc/php/
 
