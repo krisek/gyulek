@@ -2,9 +2,17 @@
 
 FROM php:8.2-fpm-alpine
 
-
 # RUN apt install autoconf
 RUN docker-php-ext-install mysqli && docker-php-ext-enable mysqli
+
+RUN set -xe && \
+    apk add --update --no-cache \
+        imap-dev \
+        openssl-dev \
+        krb5-dev && \
+    (docker-php-ext-configure imap --with-kerberos --with-imap-ssl) && \
+    (docker-php-ext-install imap > /dev/null) && \
+    php -m | grep -F 'imap'
 
 COPY config/php.ini /usr/local/etc/php/
 
