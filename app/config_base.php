@@ -14,13 +14,13 @@ while($connect_retries < 200){
         $dbh = mysqli_connect($db_options['db_host'], $db_options['db_user'], $db_options['db_pass']) or die('Nem tudok csatlakozni');
         break;
     } 
-    catch (DbException  $e) {
+    catch (Exception  $e) {
                 // write into logs maybe?
         $connect_retries++;
     }
 
 }
-
+error_log($connect_retries);
 if($connect_retries >= 200){
     die('Nem tudok csatlakozni.');
 }
