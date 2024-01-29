@@ -3,9 +3,7 @@
 FROM php:8.2-fpm
 
 # RUN apt install autoconf
-RUN docker-php-ext-install mysqli && docker-php-ext-enable mysqli
-
-RUN docker-php-ext-install imap && docker-php-ext-enable imap
+RUN apt install php-imap php-mysql php-fpm
 
 COPY config/php.ini /usr/local/etc/php/
 
