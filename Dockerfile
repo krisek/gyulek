@@ -1,11 +1,15 @@
 # based on https://github.com/khromov/alpine-nginx-php8
 
-FROM php:8.2-fpm
+FROM debian:stable-slim
 
 # RUN apt install autoconf
-RUN apt update && apt install -y php8.2-imap php8.2-mysql php8.2-fpm
+RUN apt update && apt install -y php-imap php-mysql php-fpm iproute2
 
-COPY config/php.ini /usr/local/etc/php/
+COPY config/php.ini /etc/php/8.2/fpm/php.ini
+
+COPY config/php-fpm-www.conf /etc/php/8.2/fpm/pool.d/www.conf
+COPY config/php-fpm.conf /etc/php/8.2/fpm/php-fpm.conf
+
 
 # Setup document root
 RUN mkdir -p /var/www/html/gyulek
@@ -15,7 +19,7 @@ RUN chown -R www-data:www-data /var/www/html
 
 
 # Switch to use a non-root user from here on
-USER www-data
+# USER www-data
 
 # Add application
 WORKDIR /var/www/html
@@ -23,3 +27,5 @@ COPY --chown=www-data app/ /var/www/html/gyulek
 
 # Expose the port nginx is reachable on
 EXPOSE 9000
+
+CMD php-fpm8.2 
