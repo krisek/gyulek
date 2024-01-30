@@ -1,0 +1,251 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "gyulek.fullname" . }}-app
+  labels:
+    {{- include "gyulek.labels" . | nindent 4 }}
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 40Mi
+  storageClassName: {{ .Values.storageClassName }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "gyulek.fullname" . }}-nginx.conf
+  labels:
+    {{- include "gyulek.labels" . | nindent 4 }}
+data: 
+  nginx.conf: |
+    worker_processes 1;
+    error_log stderr warn;
+    pid /run/nginx.pid;
+
+    events {
+        worker_connections 1024;
+    }
+
+    http {
+        include mime.types;
+        default_type application/octet-stream;
+
+        # Define custom log format to include reponse times
+        log_format main_timed '$remote_addr - $remote_user [$time_local] "$request" '
+                              '$status $body_bytes_sent "$http_referer" '
+                              '"$http_user_agent" "$http_x_forwarded_for" '
+                              '$request_time $upstream_response_time $pipe $upstream_cache_status';
+
+        access_log /dev/stdout main_timed;
+        error_log /dev/stderr notice;
+
+        keepalive_timeout 65;
+
+        # Max body size
+        client_max_body_size 192M;
+
+        # Write temporary files to /tmp so they can be created as a non-privileged user
+        client_body_temp_path /tmp/client_temp;
+        proxy_temp_path /tmp/proxy_temp_path;
+        fastcgi_temp_path /tmp/fastcgi_temp;
+        uwsgi_temp_path /tmp/uwsgi_temp;
+        scgi_temp_path /tmp/scgi_temp;
+
+        # Default server definition
+        server {
+            listen [::]:8080 default_server;
+            listen 8080 default_server;
+            server_name _;
+
+            # When redirecting from /url to /url/, use non-absolute redirects to avoid issues with 
+            # protocol and ports (eg. when running the Docker service on 8080 but serving in production on 443)
+            # https://stackoverflow.com/a/49638652
+            absolute_redirect off;
+
+            sendfile off;
+
+            root /var/www/html;
+            index index.php index.html;
+            
+            # Add support for "WebP Converter for Media" WordPress plugin
+            # https://wordpress.org/plugins/webp-converter-for-media/
+            location ~ ^/wp-content/(?<path>.+)\.(?<ext>jpe?g|png|gif)$ {
+                if ($http_accept !~* "image/webp") {
+                    break;
+                }
+
+                expires 180d;
+                add_header Vary Accept;
+                try_files /wp-content/uploads-webpc/$path.$ext.webp $uri =404;
+            }
+
+            location / {
+                # First attempt to serve request as file, then
+                # as directory, then fall back to index.php
+                try_files $uri $uri/ /index.php?$args;
+            }
+
+            # Redirect server error pages to the static page /50x.html
+            error_page 500 502 503 504 /50x.html;
+            location = /50x.html {
+                root /var/lib/nginx/html;
+            }
+
+            # Pass the PHP scripts to PHP-FPM listening on 127.0.0.1:9000
+            location ~ \.php$ {
+                try_files $uri =404;
+
+                fastcgi_buffers 16 16k; 
+                fastcgi_buffer_size 32k;
+
+                fastcgi_split_path_info ^(.+\.php)(/.+)$;
+                fastcgi_pass localhost:9000;
+                fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+                fastcgi_param SCRIPT_NAME $fastcgi_script_name;
+                fastcgi_index index.php;
+                include fastcgi_params;
+            }
+
+            location ~* \.(jpg|jpeg|gif|png)$ {
+                expires 180d;
+            }
+
+            location ~* \.(css|js|ico)$ {
+                expires 1d;
+            }
+
+            # Deny access to . files, for security
+            location ~ /\. {
+                log_not_found off;
+                deny all;
+            }
+
+        }
+        
+        gzip on;
+        gzip_proxied any;
+        gzip_types 
+            text/plain
+            text/css
+            text/js
+            text/xml
+            text/html
+            text/javascript
+            application/javascript
+            application/x-javascript
+            application/json
+            application/xml
+            application/xml+rss
+            application/rss+xml
+            image/svg+xml/javascript;
+        gzip_vary on;
+        gzip_disable "msie6";
+        
+        # Include other server configs
+        # include /etc/nginx/conf.d/*.conf;
+    }
+
+
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "gyulek.fullname" . }}
+  labels:
+    {{- include "gyulek.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "gyulek.selectorLabels-app" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "gyulek.selectorLabels-app" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "gyulek.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: php-fpm
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: fpm
+              containerPort: 9000
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: 9000
+          readinessProbe:
+            tcpSocket:
+              port: 9000
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+          - name: config-db
+            mountPath: /var/www/html/gyulek/config_db.php
+            subPath: config_db.php
+          - name: app
+            mountPath: /var/www/html-nginx
+        - name: nginx
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.nginx.image.repository }}:{{ .Values.nginx.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+          resources:
+            {{- toYaml .Values.nginx.resources | nindent 12 }}
+          volumeMounts:
+          - name: nginx-conf
+            mountPath: /etc/nginx/nginx.conf
+            subPath: nginx.conf
+          - name: app
+            mountPath: /var/www/html
+      volumes:
+      - name: config-db
+        secret:
+          secretName: {{ .Chart.Name }}-config-db
+          optional: true
+      - name: app
+        persistentVolumeClaim:
+          claimName: {{ include "gyulek.fullname" . }}-app
+      - name: nginx-conf
+        configMap:
+          name: {{ include "gyulek.fullname" . }}-nginx.conf
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

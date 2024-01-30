@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "gyulek.fullname" . }}
+  labels:
+    {{- include "gyulek.labels" . | nindent 4 }}
+    app.kubernetes.io/component: db
+spec:
+  type: {{ .Values.service.type }}
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "gyulek.selectorLabels-app" . | nindent 4 }}
