@@ -1,3 +1,4 @@
 config_db*.php
 app/db/*
 config/nginx.conf
+helm/values-*
