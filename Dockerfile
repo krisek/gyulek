@@ -19,7 +19,7 @@ RUN chown -R www-data:www-data /var/www/html
 
 
 # Switch to use a non-root user from here on
-# USER www-data
+USER www-data
 
 # Add application
 WORKDIR /var/www/html
