@@ -183,7 +183,7 @@ class freetag {
 			return false;
 		}		
 		$db = $this->db;
-		$tag = $db->qstr($tag, get_magic_quotes_gpc());
+		$tag = $db->qstr($tag, TRUE);
 
 		if(isset($tagger_id) && ($tagger_id > 0)) {
 			$tagger_sql = "AND tagger_id = $tagger_id";
@@ -229,7 +229,7 @@ class freetag {
 			return false;
 		}		
 		$db = $this->db;
-		$tag = $db->qstr($tag, get_magic_quotes_gpc());
+		$tag = $db->qstr($tag, TRUE);
 
 		if(isset($tagger_id) && ($tagger_id > 0)) {
 			$tagger_sql = "AND tagger_id = $tagger_id";
@@ -282,7 +282,7 @@ class freetag {
 		}
 
 		foreach ($tagArray as $key => $value) {
-			$tagArray[$key] = $db->qstr($value, get_magic_quotes_gpc());
+			$tagArray[$key] = $db->qstr($value, TRUE);
 		}
 
 		$tagArray = array_unique($tagArray);
@@ -444,9 +444,9 @@ class freetag {
 			$tag = preg_replace('/^([0-9]+)$/', "$1".$this->_append_to_integer, $tag); 
 		}
 
-		$normalized_tag = $db->qstr($this->normalize_tag($tag), get_magic_quotes_gpc());
+		$normalized_tag = $db->qstr($this->normalize_tag($tag), TRUE);
 
-		$tag = $db->qstr($tag, get_magic_quotes_gpc());
+		$tag = $db->qstr($tag, TRUE);
 		$prefix = $this->_table_prefix;
 
 		// First, check for duplicate of the normalized form of the tag on this object.
@@ -650,7 +650,7 @@ class freetag {
 		$db = $this->db;
 		$prefix = $this->_table_prefix;
 
-		$tag = $db->qstr($tag, get_magic_quotes_gpc());
+		$tag = $db->qstr($tag, TRUE);
 
 		$sql = "SELECT id FROM ${prefix}freetags
 			WHERE 
@@ -682,7 +682,7 @@ class freetag {
 		$db = $this->db;
 		$prefix = $this->_table_prefix;
 
-		$tag = $db->qstr($tag, get_magic_quotes_gpc());
+		$tag = $db->qstr($tag, TRUE);
 
 		$sql = "SELECT id FROM ${prefix}freetags
 			WHERE 
@@ -794,7 +794,7 @@ class freetag {
 		foreach($tagArray as $tag) {
 			$tag = trim($tag);
 			if(($tag != '') && (strlen($tag) <= $this->_MAX_TAG_LENGTH) && (strlen($tag) >= $this->_MIN_TAG_LENGTH)) {
-				if(get_magic_quotes_gpc()) {
+				if(TRUE) {
 					$tag = addslashes($tag);
 				}
 				$this->safe_tag($tagger_id, $object_id, $tag);
@@ -820,7 +820,7 @@ class freetag {
 			return $newwords;
 		}
 		# Perform tag parsing
-		if(get_magic_quotes_gpc()) {
+		if(TRUE) {
 			$query = stripslashes(trim($tag_string));
 		} else {
 			$query = trim($tag_string);
@@ -931,7 +931,7 @@ class freetag {
 				ORDER BY tagged_on DESC
 				LIMIT $offset, $limit ";
 		} else {
-			$tag = $db->qstr($tag, get_magic_quotes_gpc());
+			$tag = $db->qstr($tag, TRUE);
 			$sql = "SELECT DISTINCT object_id, tagged_on
 				FROM ${prefix}freetagged_objects INNER JOIN ${prefix}freetags ON (tag_id = id)
 				WHERE tag = $tag
@@ -1186,7 +1186,7 @@ class freetag {
 			return $retarr;
 		}
 		$db = $this->db;
-		$tag = $db->qstr($tag, get_magic_quotes_gpc());
+		$tag = $db->qstr($tag, TRUE);
 		$where_sql = "";
 		if (isset($tagger_id) && intval($tagger_id) > 0) {
 			$tagger_id = intval($tagger_id);
