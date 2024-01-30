@@ -48,7 +48,7 @@ else{
         $_SESSION['key'] = $_POST['key'];
     }
     
-    if(isset($_POST['user']) && ! in_array($_POST['user'], $offshore_users)   ){
+    if(isset($_POST['user']) && ! in_array($_POST['user'], array_merge($offshore_users, [$admin_user])  )   ){
         $_SESSION['loginfail'] = 1;
         error_log('user not on list: ' . $_POST['user'] . "   " . join(', ', $offshore_users));
         header("Location: " . (empty($_SERVER['HTTPS']) ? 'http' : 'https') . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]");
@@ -66,13 +66,20 @@ else{
     }
     elseif(isset($_POST['user']) && isset($_POST['password'])){
         
-        if(pop3_login("mail.lutheran.hu",$_POST['user'],$_POST['password']) === FALSE){
-            error_log('login failed ' . $_POST['user']);
-            $_SESSION['loginfail'] = 1;
-            header("Location: " . (empty($_SERVER['HTTPS']) ? 'http' : 'https') . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]");
-            die();
+        $login_success = 0;
+
+        if($_POST['user'] == $admin_user){
+            if(password_verify($_POST['password'], $admin_pass)){
+                $login_success = 1;
+            }
         }
         else{
+            if(!(pop3_login("mail.lutheran.hu",$_POST['user'],$_POST['password']) === FALSE)){
+                $login_success = 1;
+            }
+        }
+        
+        if($login_success == 1){
             $_SESSION['user'] = preg_replace('/@lutheran.hu/','',$_POST['user']);
             
             if($_POST['remember'] == 'remember'){
@@ -84,6 +91,13 @@ else{
                 //setcookie("client_id", $client_id, time()+60*60*24*28,null,null,TRUE);
                 setcookie("client_id", $client_id, time()+60*60*24*28);
             }
+
+        }
+        else{
+            error_log('login failed ' . $_POST['user']);
+            $_SESSION['loginfail'] = 1;
+            header("Location: " . (empty($_SERVER['HTTPS']) ? 'http' : 'https') . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]");
+            die();
         }
     }
 
