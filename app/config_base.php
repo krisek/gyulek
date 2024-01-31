@@ -7,21 +7,18 @@ $aes_enabled = FALSE;
 
 $connect_retries = 0;
 
-while($connect_retries < 200){
-
+while($connect_retries < 5){
     try 
     {
         $dbh = mysqli_connect($db_options['db_host'], $db_options['db_user'], $db_options['db_pass']) or die('Nem tudok csatlakozni');
         break;
     } 
     catch (Exception  $e) {
-                // write into logs maybe?
         $connect_retries++;
     }
 
 }
-error_log($connect_retries);
-if($connect_retries >= 200){
+if($connect_retries >= 5){
     die('Nem tudok csatlakozni.');
 }
 
