@@ -1,4 +1,8 @@
 <?
+
+$line = array();
+$line['id'] = '';
+
 include("lang.php");
 include("config_base.php");
 include("config.php");

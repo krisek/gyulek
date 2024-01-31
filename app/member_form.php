@@ -4,7 +4,7 @@
 <input type="hidden" name="id" value="<?=$line['id']?>">
 <?
 $undelete = 0;
-if(preg_match('/^s\s*:\s*torolt/',$pattern)){
+if(preg_match('/^s\s*:\s*torolt/',$pattern ?? '')){
 ?>
 <input type="hidden" name="undelete" value="<?=$line['id']?>">
 <?
@@ -13,28 +13,28 @@ if(preg_match('/^s\s*:\s*torolt/',$pattern)){
 ?>
 <?=$line['id']?>
 </td>
-<td id="nev_header_<?=$line['id']?>"><?=$line['nev']?></td>
+<td id="nev_header_<?=$line['id']?>"><?=$line['nev'] ?? null?></td>
 <!--
 <td>
-<? if ($line['szul_datum'] != '0000-00-00'): ?> <?=$line['szul_datum']?> (<?=$line['kor']?>)<?endif;?>
+<? if ($line['szul_datum']  ?? null != '0000-00-00'): ?> <?=$line['szul_datum']  ?? null ?> (<?=$line['kor']  ?? null ?>)<?endif;?>
 </td>
 //-->
 
 <td id="telefon_header_<?=$line['id']?>">
-<?=FormatMSISDN($line['telefon'])?>
+<?=FormatMSISDN($line['telefon'] ?? '')?>
 </td>
 <td id="telefon_mobil_header_<?=$line['id']?>">
-<?=FormatMSISDN($line['telefon_mobil'])?>
+<?=FormatMSISDN($line['telefon_mobil'] ?? '')?>
 </td>
 
-<td nowrap><span id="ir_szam_header_<?=$line['id']?>"><?=$line['ir_szam']?></span><?if($line['ir_szam'] != ''):?>.<?endif;?> <span id="varos_header_<?=$line['id']?>"><?=$line['varos']?></span><?if($line['cim'] != ''):?>,<?endif;?> <span id="cim_header_<?=$line['id']?>"><?=$line['cim']?></span>
+<td nowrap><span id="ir_szam_header_<?=$line['id']?>"><?=$line['ir_szam'] ?? ''?></span><?if($line['ir_szam'] ?? '' != ''):?>.<?endif;?> <span id="varos_header_<?=$line['id']?>"><?=$line['varos'] ?? '' ?></span><?if($line['cim'] ?? '' != ''):?>,<?endif;?> <span id="cim_header_<?=$line['id']?>"><?=$line['cim'] ?? '' ?></span>
 </td>
 
 <?if($line['id'] != ''):?>
 <td nowrap><a href="javascript:addForm('<?=$line['id']?>')"><var style="font-style: normal;" id="innerlink<?=$line['id']?>"><?=$lang['details_show']?></var></a></td>
-<td nowrap><a href="?clearsession=true&pattern=spec-csalad-<?=$line['member_id']?>">családja</a></td>
+<td nowrap><a href="?clearsession=true&pattern=spec-csalad-<?=$line['member_id'] ?? ''?>">családja</a></td>
 <td nowrap><a href="javascript:deleteForm('<?=$line['id']?>')">x</a> <a href="list_print.php?pattern=spec-id-<?=$line['id']?>">b</a></td>
- <td><? if ($line['email'] != ''): ?><a href="mailto:<?=$email?>" onMouseOver="window.status='<?=$line['nev']?>';return true;" onMouseOut="window.status='';" >@</a><?endif;?></td>
+ <td><? if ($line['email'] ?? '' != ''): ?><a href="mailto:<?=$email?>" onMouseOver="window.status='<?=$line['nev']?>';return true;" onMouseOut="window.status='';" >@</a><?endif;?></td>
 <?endif;?>
 </tr>
 <tr id="member2row<?=$line['id']?>" style="display: none;">
@@ -50,16 +50,16 @@ if(preg_match('/^s\s*:\s*torolt/',$pattern)){
 <?$field_name = $field_order[$field_c];?>
 
 <td nowrap <?if($field_name != 'cimke' && $field_name != 'megjegyzes' ):?>class="theStyle"<?endif;?>>
-<?if(isset($fields[$field_name]['descr'])):?>
+<?if( $fields[$field_name]['descr'] ?? '' != '' ):?>
 <?=$fields[$field_name]['descr']?>: <br>
-<?DisplayInputField($field_name,$line[$field_name],$fields[$field_name]['type'],$fields[$field_name]['show'] ?? '',$fields[$field_name]['length'] ?? '',$line['id']);?>
+<?DisplayInputField($field_name,$line[$field_name] ?? '',$fields[$field_name]['type'],$fields[$field_name]['show'] ?? '',$fields[$field_name]['length'] ?? '',$line['id']);?>
 <?else:?>
 
 <?=$fields['group_descr'][$field_name]?>:<br> 
 
 <?for($group_el_c = 0; $group_el_c < sizeof($fields['group'][$field_name]); $group_el_c++):?>
 <?$sub_field_name= $fields['group'][$field_name][$group_el_c];?>
-<?DisplayInputField($sub_field_name,$line[$sub_field_name],$fields[$sub_field_name]['type'],$fields[$sub_field_name]['show'] ?? '',$fields[$sub_field_name]['length'] ?? '',$line['id']);?>
+<?DisplayInputField($sub_field_name,$line[$sub_field_name] ?? '',$fields[$sub_field_name]['type'],$fields[$sub_field_name]['show'] ?? '',$fields[$sub_field_name]['length'] ?? '',$line['id']);?>
 <?if($group_el_c < sizeof($fields['group'][$field_name])-1):?>/<?endif;?>
 <?endfor;?> 
 
@@ -92,7 +92,7 @@ Befizetések:<br>
 </div>
 <div>
 Címkék:<br>
-<textarea name="cimke" class="<?if($show ?? 0 != 1):?>lightborder<?else:?>redborder<?endif;?>" id="cimke_<?=$line['id']?>"><?=$line['cimke']?></textarea><br/>
+<textarea name="cimke" class="<?if($show ?? 0 != 1):?>lightborder<?else:?>redborder<?endif;?>" id="cimke_<?=$line['id']?>"><?=$line['cimke'] ?? ''?></textarea><br/>
         <span id="cimke_<?=$line['id']?>_list">
         
         </span>
