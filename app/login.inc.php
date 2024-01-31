@@ -59,8 +59,8 @@ else{
         //put username into session
         $client_id = mysqli_real_escape_string($dbh, $_COOKIE['client_id']);
         $result = mysqli_query($dbh, "SELECT * FROM ${global_table_prefix}permanent_users WHERE client_id = '$client_id'"); 
-        if ($line = mysqli_fetch_assoc($result)) {
-            $_SESSION['user'] = $line['user'];
+        if ($client_line = mysqli_fetch_assoc($result)) {
+            $_SESSION['user'] = $client_line['user'];
         }
         mysqli_free_result($result);
     }
