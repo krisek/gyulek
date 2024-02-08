@@ -80,12 +80,7 @@ foreach($fields as $field => $field_params){
         $first = false;
         }
 
-    if($field == 'konf_ev'){
-        $statement .= "$field = ". setQ("str_to_date('".$_REQUEST[$field]."','%Y') ",null, 0)  ;
-        }
-    else{
-        $statement .= "$field = ".setQ($_REQUEST[$field])." ";
-        }
+    $statement .= "$field = ". setQ($_REQUEST[$field])." ";
     
     }
 
