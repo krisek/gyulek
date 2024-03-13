@@ -66,8 +66,10 @@ foreach($fields as $field => $field_params){
         $fields[$field]['show'] = 1; 
         }
     if($field_params['type'] == 'date' && $_REQUEST[$field] == '' ){
-        
         continue;
+    }
+    if(($field == 'konf_ev' || $field == 'szul_datum') && $_REQUEST[$field] == '' ){
+        $_REQUEST[$field] = 0;
     }
     if(($field == 'member_id' || $field == 'hazastars') && $_REQUEST[$field] == '' ){
         
