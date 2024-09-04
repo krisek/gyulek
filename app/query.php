@@ -104,6 +104,18 @@ else if($pattern != ''){
         $statement = "select $selectfields FROM ${global_table_prefix}catalog c, ${global_table_prefix}members m WHERE c.member_id = m.id and c.catalog_name = '$mycatalog' and " . getQ("leave","m",0) ." = '0000-00-00' AND year(" . getQ("konf_ev","m",0) .") = '$result[1]' $tag_query $additional_filter ORDER BY $orderby $limit";
         $filtertext = "Konfirmáció éve - $result[1]";
     }
+    else if(preg_match('/^km:\s*(\d{4})\D+(\d{4})/',$pattern,$result)){
+        $statement = "select $selectfields FROM ${global_table_prefix}catalog c, ${global_table_prefix}members m WHERE c.member_id = m.id and c.catalog_name = '$mycatalog' and " . getQ("leave","m",0) ." = '0000-00-00' AND year(" . getQ("szul_datum","m",0) .") >= '$result[1]' and year(" . getQ("szul_datum","m",0) .") <= '$result[2]' and year(" . getQ("konf_ev","m",0) .") = 0 $tag_query $additional_filter ORDER BY $orderby $limit";
+        $filtertext = "Konfirmáció meghívó - $result[1] - $result[2]";
+    }
+    else if(preg_match('/^sze:\s*(\d{4})\D+(\d{4})/',$pattern,$result)){
+        $statement = "select $selectfields FROM ${global_table_prefix}catalog c, ${global_table_prefix}members m WHERE c.member_id = m.id and c.catalog_name = '$mycatalog' and " . getQ("leave","m",0) ." = '0000-00-00' AND year(" . getQ("szul_datum","m",0) .") >= '$result[1]' and year(" . getQ("szul_datum","m",0) .") <= '$result[2]' $tag_query $additional_filter ORDER BY $orderby $limit";
+        $filtertext = "Születés éve - $result[1] - $result[2]";
+    }
+    else if(preg_match('/^sze:\s*(\d{4})/',$pattern,$result)){
+        $statement = "select $selectfields FROM ${global_table_prefix}catalog c, ${global_table_prefix}members m WHERE c.member_id = m.id and c.catalog_name = '$mycatalog' and " . getQ("leave","m",0) ." = '0000-00-00' AND year(" . getQ("szul_datum","m",0) .") = '$result[1]' $tag_query $additional_filter ORDER BY $orderby $limit";
+        $filtertext = "Születés éve - $result[1]";
+    }
     else if(preg_match('/^b:\s*(\d{4})\D(\d{2})/',$pattern,$result)){
         $statement = "select $selectfields FROM ${global_table_prefix}catalog c, ${global_table_prefix}members m WHERE c.member_id = m.id and c.catalog_name = '$mycatalog' and " . getQ("leave","m",0) ." = '0000-00-00' AND year(" . getQ("szul_datum","m",0) .") = '$result[1]' AND MONTH(" . getQ("szul_datum","m",0) .") = '$result[2]'  $tag_query $additional_filter ORDER BY $orderby $limit";
         $filtertext = "Születésnaposok - $result[1]-$result[2]";
