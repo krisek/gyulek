@@ -15,17 +15,22 @@
             }
 
             @page {
-                margin: 0;
+                margin: 24px;
             }
+
+
 
             body {
-                margin: 0cm;
+                margin: 0;
+                padding: 0;
+                transform: rotate(-90deg);
+                transform-origin: top left;
+                width: 100vh; /* Adjust as necessary for full page rotation */
+                height: 100vw;
             }
 
-            .rotated {
-                transform: rotate(-90deg);
-                /* Equal to rotateZ(45deg) */
-            }
+            
+
         }
 
         .footer,
@@ -93,14 +98,15 @@
             font-size: 16px;
         }
     </style>
-
+    <footer>
+    </footer>
     <?php while ($line = mysqli_fetch_assoc($result)) {?>
 
     <div class="divTable rotated">
         <div class="divTableBody">
             <div class="divTableRow">
                 <div class="divTableCell sender">
-                    <div><img src="boritek/budavar_fejlec.jpg" border="0" width="88%"></div>
+                    <div><img src="boritek/budavar_fejlec.jpg" border="0" width="60%"></div>
                     <div style=" padding-left: 12px;padding-top: 12px;">
                         <?=$fa[0]?><br />
                         <?=$fa[1]?><br />
@@ -120,7 +126,7 @@
                 <div class="divTableCell">&nbsp;</div>
                 <div class="divTableCell receiver">
                     <?=$line['nev']?><br />
-                    <?if(isset($line[nev2])):?><?=$line['nev2']?>
+                    <?if(isset($line['nev2'])):?><?=$line['nev2']?>
                     <?endif;?><br />
                     <u><?=$line['varos']?></u> <br />
                     <?=$line['cim']?><br />
