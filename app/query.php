@@ -18,6 +18,14 @@ if($tag_pattern != ''){
         //$tags = explode(' ',$result[1]);
         //$tag_query = " and (  m.cimke LIKE '%". implode("%' and m.cimke like '%",$tags) ."%') ";
         $tags = $freetags['cimke']->_parse_tags($result[1]);
+        $tag_query = " and m.id IN (SELECT object_id FROM ${global_table_prefix}member_freetagged_objects WHERE tag_id IN (SELECT id FROM ${global_table_prefix}member_freetags WHERE tag = '". implode("' tag = '" . getQ("cimke","m",0) ."' and ",$tags) ."' )) ";    
+        $filtertext_add = "és címkék közül mindegyik - $result[1]";
+    }
+    else if(preg_match('/^cm:\s*(.*)/',$tag_pattern,$result)){
+        $tags = array();
+        //$tags = explode(' ',$result[1]);
+        //$tag_query = " and (  m.cimke LIKE '%". implode("%' and m.cimke like '%",$tags) ."%') ";
+        $tags = $freetags['cimke']->_parse_tags($result[1]);
         $tag_query = " and m.id IN (SELECT object_id FROM ${global_table_prefix}member_freetagged_objects WHERE tag_id IN (SELECT id FROM ${global_table_prefix}member_freetags WHERE tag LIKE '%". implode("%' and " . getQ("cimke","m",0) ." like '%",$tags) ."%')) ";    
         
         $filtertext_add = " és címkék közül mindegyik - $result[1]";
@@ -159,6 +167,17 @@ else if($pattern != ''){
         $filtertext = "Irányítószám - $result[1]";
     }
     else if(preg_match('/^c:\s*(.*)/',$pattern,$result)){
+        $tags = array();
+        //$tags = explode(' ',$result[1]);
+        
+        //$statement = "select $selectfields FROM ${global_table_prefix}catalog c, ${global_table_prefix}members m WHERE c.member_id = m.id and c.catalog_name = '$mycatalog' and " . getQ("leave","m",0) ." = '0000-00-00' and (  m.cimke LIKE '%". implode("%' and m.cimke like '%",$tags) ."%') $tag_query $additional_filter ORDER BY $orderby $limit";
+		$tags = $freetags['cimke']->_parse_tags($result[1]);
+        $statement = "select $selectfields FROM ${global_table_prefix}catalog c, ${global_table_prefix}members m WHERE c.member_id = m.id and c.catalog_name = '$mycatalog' and " . getQ("leave","m",0) ." = '0000-00-00' and m.id IN (SELECT object_id FROM ${global_table_prefix}member_freetagged_objects WHERE tag_id IN (SELECT id FROM ${global_table_prefix}member_freetags WHERE tag = '". implode("' and m.cimke = '",$tags) ."')) $tag_query $additional_filter ORDER BY $orderby $limit";
+        	
+        
+        $filtertext = "Címkék közül mindegyik - $result[1]";
+    }
+    else if(preg_match('/^cm:\s*(.*)/',$pattern,$result)){
         $tags = array();
         //$tags = explode(' ',$result[1]);
         
