@@ -139,7 +139,7 @@ CREATE TABLE `members` (
   `ker_hely` varchar(100) NOT NULL default '',
   `ker_datum` date NOT NULL default '0000-00-00',
   `ker_ige` varchar(100) NOT NULL default '',
-  `konf_ev` date default NULL,
+  `konf_ev` year default NULL,
   `konf_ige` varchar(100) NOT NULL default '',
   `polg_esk_h` varchar(100) NOT NULL default '',
   `polg_esk_datum` date NOT NULL default '0000-00-00',

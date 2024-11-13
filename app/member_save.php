@@ -68,11 +68,11 @@ foreach($fields as $field => $field_params){
     if($field_params['type'] == 'date' && $_REQUEST[$field] == '' ){
         continue;
     }
-    if(($field == 'konf_ev' || $field == 'szul_datum') && $_REQUEST[$field] == '' ){
+    if($field == 'szul_datum' && $_REQUEST[$field] == '' ){
         $_REQUEST[$field] = '0000-00-00';
     }
-    if($field == 'konf_ev' && $_REQUEST[$field] == '0000'){
-        $_REQUEST[$field] = '0000-00-00';
+    if($field == 'konf_ev' && $_REQUEST[$field] == ''){
+        $_REQUEST[$field] = '0000';
     }
     if(($field == 'member_id' || $field == 'hazastars') && $_REQUEST[$field] == '' ){
         
