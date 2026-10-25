@@ -1,31 +1,36 @@
-# based on https://github.com/khromov/alpine-nginx-php8
-
 FROM debian:stable-slim
 
-# RUN apt install autoconf
-RUN apt update && apt install -y php-imap php-mysql php-fpm iproute2
+# Install build tools, C-client libraries, and PHP 8.4
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    php-fpm \
+    php-dev \
+    php-pear \
+    php-mysql \
+    libc-client-dev \
+    libkrb5-dev \
+    libssl-dev \
+    make \
+    gcc \
+    iproute2 \
+    && pecl install imap \
+    && echo "extension=imap.so" > /etc/php/8.4/fpm/conf.d/20-imap.ini \
+    && echo "extension=imap.so" > /etc/php/8.4/cli/conf.d/20-imap.ini \
+    # Clean up build dependencies to keep the image slim
+    && apt-get purge -y php-dev php-pear make gcc \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/* /tmp/pipelined-pecl*
 
-COPY config/php.ini /etc/php/8.2/fpm/php.ini
+COPY config/php.ini /etc/php/8.4/fpm/php.ini
+COPY config/php-fpm-www.conf /etc/php/8.4/fpm/pool.d/www.conf
+COPY config/php-fpm.conf /etc/php/8.4/fpm/php-fpm.conf
 
-COPY config/php-fpm-www.conf /etc/php/8.2/fpm/pool.d/www.conf
-COPY config/php-fpm.conf /etc/php/8.2/fpm/php-fpm.conf
+RUN mkdir -p /var/www/html/gyulek && chown -R www-data:www-data /var/www/html
 
-
-# Setup document root
-RUN mkdir -p /var/www/html/gyulek
-
-# Make sure files/folders needed by the processes are accessable when they run under the nobody user
-RUN chown -R www-data:www-data /var/www/html
-
-
-# Switch to use a non-root user from here on
 USER www-data
 
-# Add application
 WORKDIR /var/www/html
 COPY --chown=www-data app/ /var/www/html/gyulek
 
-# Expose the port nginx is reachable on
 EXPOSE 9000
 
-CMD php-fpm8.2 
+CMD ["php-fpm8.4", "-F"]
